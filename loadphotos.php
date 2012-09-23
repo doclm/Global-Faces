@@ -10,7 +10,8 @@ if (mysql_num_rows($result) > 0)
 	}
 }
 $row = 1;
-for ( $x = 1; $x <= $show; $x++) 
+$show = 40;
+for ( $x = 1; $x <= $show; $x++)
 {
 	$random = rand(1, 41);
 	$round = sprintf('%04d', $random);

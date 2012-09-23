@@ -35,7 +35,7 @@
 			<div id="MenuSpacer"></div>
 			<div id="PhotosList">
 				<ul>
-					<l><img id='1' src='faces/face_0001.jpg' alt='imagename' /></li>
+					<l><img id='1' src='faces/face_0000.jpg' alt='imagename' /></li>
 				</ul>
 			</div>
 		</div>

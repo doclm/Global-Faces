@@ -179,17 +179,26 @@ function resizeend() {
 
 // Liam's additions
 var ROTATION_TIME = 5000;
-var ROTATION_NUMBER = 10;
+var ROTATION_NUMBER = 1;
 var MAX_IMG = 41;
 var MAX_SHOW = 10;
 var allImages = new Array(MAX_IMG);
 var imagesInView = new Array(MAX_IMG);
 var imagesRespondedTo = new Array();
 var imagesUnseen = new Array();
+var elements = [];
 
 
 
 // http://stackoverflow.com/questions/1267283/how-can-i-create-a-zerofilled-value-using-javascript
+/**
+ * Generates a consistent zero-padded number.
+ * For example, 'zeroPadLeft(number, width)' generates '0001'.
+ *
+ * @param number
+ * @param width
+ * @return {*}
+ */
 function zeroPadLeft(number, width) {
     width -= number.toString().length;
     if ( width > 0 ) {
@@ -198,6 +207,9 @@ function zeroPadLeft(number, width) {
     return number;
 }
 
+/**
+ * Loads images - needs to be replaced by dynamic call to load images from the database.
+ */
 function loadImages() {
     // Load images here
     for (var i = 0; i < MAX_IMG; i++) {
@@ -210,20 +222,9 @@ function loadImages() {
 }
 
 
-function swapUnseenForSeenImage(imgID) {
-    if (imagesUnseen.length > 0) {
-        var currentImage = $('#img' + imgID);
-        var first = _.first(imagesUnseen);
-        addImage(first, currentImage);
-        imagesUnseen = _.rest(imagesUnseen);
-        //currentImage.remove();
-
-        // For safe-keeping, store the ID
-        imagesRespondedTo.push(imgID);
-    }
-
-}
-
+/**
+ * Shows all images
+ */
 function showImages() {
     var randomImages = _.shuffle(allImages);
     imagesInView = _.first(randomImages, MAX_SHOW);
@@ -237,11 +238,16 @@ function showImages() {
 
     for (var i = 0; i < totalImages; i++) {
         var randomImage = Math.floor(Math.random() * imagesInView.length);
-        addImage(imagesInView[randomImage]);
+        addImageInstance(imagesInView[randomImage]);
     }
 }
 
-function addImage(img, sibling) {
+/**
+ * Add an image instance to the page.
+ * @param img
+ * @param sibling
+ */
+function addImageInstance(img, sibling) {
     var id = img.id;
     var uniqueId = id + '_' + Math.floor(Math.random() * 1000);
     var liNode = ('<li data-id="' + id + '" id="img' + uniqueId + '" class="' + id + '"></li>');
@@ -263,16 +269,100 @@ function addImage(img, sibling) {
     $('#form' + uniqueId).append(img2);
 }
 
+
+
+/**
+ * Swaps all instances of a given image (with a given class ID)
+ * @param classId
+ * @param newImage
+ */
+function swapAllInstancesOfImage(classId, newImage) {
+    var newClassId = newImage.id;
+    var classes = $('.' + classId);
+    classes.attr('class', newClassId);
+    classes.attr('data-id', newClassId);
+
+    // Copy classes to a global elements array
+    elements = [];
+    classes.each(function(index, element) {
+        elements.push(element);
+    });
+
+    setTimeout(function() {
+        replaceAllInstancesOfImage(elements, newClassId, newImage)
+    }, 250);
+}
+
+/**
+ * Replaces all instances of an image
+ * @param elements
+ * @param newClassId
+ * @param newImage
+ */
+function replaceAllInstancesOfImage(elements, newClassId, newImage) {
+    var elem = _.first(elements),
+        selector = $(elem);
+    var uniqueId = newClassId + '_' + Math.floor(Math.random() * 1000);
+    replaceImageInstance(selector, uniqueId, newImage)
+    elements = _.rest(elements);
+    if (elements.length > 0) {
+        setTimeout(function() {
+            replaceAllInstancesOfImage(elements, newClassId, newImage)
+        }, 250);
+    }
+}
+
+/**
+ * Replaces a specific instance of an image
+ * @param elem
+ * @param newId
+ * @param newImage
+ */
+function replaceImageInstance(elem, newId, newImage) {
+    var replacementImage = new Image();
+    replacementImage.src = newImage.src;
+    replacementImage.id = newId;
+
+    // Poor man's ticker - needs proper replacement
+    // See jquery.flightboard for an approach to this
+    elem.hide();
+    elem.empty();
+    elem.attr('id', 'img' + newId)
+    elem.append(replacementImage)
+    elem.append('<div id="form' + newId + '" class="form"></div>');
+    $('#form' + newId).append('<div class="closeForm"></div>');
+    var img2 = new Image();
+    img2.src = newImage.src;
+    img2.height = 300;
+    $('#form' + newId).append(img2);
+    elem.slideDown(250)
+}
+
+/**
+ * Starts the rotation of images
+ */
 function startRotation() {
+//    setTimeout(function() {
     setInterval(function() {
         console.log('doing rotation')
         for (var i = 0; i < ROTATION_NUMBER; i++) {
+            var newImage = _.first(imagesUnseen);
+            var oldImage = _.first(imagesInView);
+            swapAllInstancesOfImage(oldImage.id, newImage);
 
-//            swapUnseenForSeenImage()
+            imagesInView = _.rest(imagesInView);
+            imagesUnseen = _.rest(imagesUnseen);
+            imagesInView.push(newImage)
+
+            // For safe-keeping, store the ID
+//            imagesRespondedTo.push(imgID);
         }
     }, ROTATION_TIME);
 }
 
+/**
+ * Loads and shows images, and kicks off image rotations.
+ */
 function initialLoad() {
     loadImages();
     showImages();

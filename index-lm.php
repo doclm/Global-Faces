@@ -19,6 +19,7 @@
             , 'less-1.3.0.min.js'
             , 'jquery.hoverIntent.minified.js'
             , 'jquery.lazyload.min.js'
+            , 'jquery.flightboard/jquery.flightboard.min.js'
         )
             .wait(function () {
             })
